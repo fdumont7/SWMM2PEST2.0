@@ -54,7 +54,7 @@
          <x>0</x>
          <y>0</y>
          <width>1278</width>
-         <height>723</height>
+         <height>757</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout_2">
@@ -64,7 +64,7 @@
            <bool>true</bool>
           </property>
           <property name="currentIndex">
-           <number>1</number>
+           <number>2</number>
           </property>
           <widget class="QWidget" name="tabSubcatchments">
            <attribute name="title">
@@ -108,8 +108,8 @@
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>948</width>
-                      <height>591</height>
+                      <width>1008</width>
+                      <height>682</height>
                      </rect>
                     </property>
                     <layout class="QGridLayout" name="gridLayout_4">
@@ -188,8 +188,8 @@
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>948</width>
-                      <height>591</height>
+                      <width>1008</width>
+                      <height>682</height>
                      </rect>
                     </property>
                     <layout class="QGridLayout" name="gridLayout_7">
@@ -229,6 +229,108 @@
             </item>
            </layout>
           </widget>
+          <widget class="QWidget" name="tabJunction">
+           <attribute name="title">
+            <string>Junction</string>
+           </attribute>
+           <widget class="QWidget" name="horizontalLayoutWidget">
+            <property name="geometry">
+             <rect>
+              <x>9</x>
+              <y>9</y>
+              <width>1237</width>
+              <height>705</height>
+             </rect>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <item>
+              <widget class="QWidget" name="widget_3" native="true">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <widget class="QListWidget" name="listWidget">
+                <property name="geometry">
+                 <rect>
+                  <x>9</x>
+                  <y>9</y>
+                  <width>200</width>
+                  <height>684</height>
+                 </rect>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>200</width>
+                  <height>684</height>
+                 </size>
+                </property>
+               </widget>
+               <widget class="QScrollArea" name="scrollArea_4">
+                <property name="geometry">
+                 <rect>
+                  <x>215</x>
+                  <y>9</y>
+                  <width>1010</width>
+                  <height>684</height>
+                 </rect>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>684</height>
+                 </size>
+                </property>
+                <property name="widgetResizable">
+                 <bool>true</bool>
+                </property>
+                <widget class="QWidget" name="scrollAreaWidgetContents_4">
+                 <property name="geometry">
+                  <rect>
+                   <x>0</x>
+                   <y>0</y>
+                   <width>1008</width>
+                   <height>682</height>
+                  </rect>
+                 </property>
+                 <widget class="QWidget" name="formLayoutWidget">
+                  <property name="geometry">
+                   <rect>
+                    <x>9</x>
+                    <y>9</y>
+                    <width>988</width>
+                    <height>663</height>
+                   </rect>
+                  </property>
+                  <layout class="QFormLayout" name="formLayout">
+                   <property name="sizeConstraint">
+                    <enum>QLayout::SetNoConstraint</enum>
+                   </property>
+                   <property name="horizontalSpacing">
+                    <number>10</number>
+                   </property>
+                   <property name="verticalSpacing">
+                    <number>12</number>
+                   </property>
+                   <property name="leftMargin">
+                    <number>50</number>
+                   </property>
+                   <property name="topMargin">
+                    <number>10</number>
+                   </property>
+                   <property name="rightMargin">
+                    <number>50</number>
+                   </property>
+                   <property name="bottomMargin">
+                    <number>10</number>
+                   </property>
+                  </layout>
+                 </widget>
+                </widget>
+               </widget>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </widget>
          </widget>
         </item>
        </layout>
@@ -243,7 +345,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>38</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

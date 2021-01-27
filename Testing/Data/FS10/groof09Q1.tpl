@@ -1,3 +1,4 @@
+ptf #
 ;;Project Title/Notes
 ;;Data from Seattle FS10 Green Roof Study
 ;;Data entered on December 9, 2013, 2013 by E. Hirschmann
@@ -71,7 +72,7 @@ FS10             3.0        0.5        4
 ;;-------------- ---------- ----------
 GreenRoof        GR
 ;;GreenRoof      SURFACE   srf_strg   srf_vgvlm   srf_rghns    srf_slp   0.0
-GreenRoof        SURFACE  1.00000000 .0500000000 .4100000000 4.17000000  0.1
+GreenRoof        SURFACE  #srfc_lyr_str# .0500000000 .4100000000 4.17000000  0.1
 ;;GreenRoof      SOIL       sl_thck    sl_prsty    sl_fldcp   sl_wltpt      sl_kst     sl_kcff     sl_sctn
 GreenRoof        SOIL     4.00000000 .4700000000 .3300000000 .090000000  3.00000000  .500000000  4.00000000
 ;;GreenRoof      DRAINMAT  dmt_thck   dmt_vdrto   dmt_rghns
