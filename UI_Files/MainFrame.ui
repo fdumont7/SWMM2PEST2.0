@@ -248,7 +248,7 @@
                <property name="enabled">
                 <bool>true</bool>
                </property>
-               <widget class="QListWidget" name="listWidget">
+               <widget class="QListWidget" name="listJunction">
                 <property name="geometry">
                  <rect>
                   <x>9</x>
@@ -300,7 +300,7 @@
                     <height>663</height>
                    </rect>
                   </property>
-                  <layout class="QFormLayout" name="formLayout">
+                  <layout class="QFormLayout" name="formLayout_Jun">
                    <property name="sizeConstraint">
                     <enum>QLayout::SetNoConstraint</enum>
                    </property>

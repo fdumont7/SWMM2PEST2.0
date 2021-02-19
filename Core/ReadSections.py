@@ -1,14 +1,16 @@
 # ReadSections.py
 #
 # Project: SWMM2PEST
-# Version: 2.0
-# Date:   06/04/2018 (version 2.0; author: X.Lin)
+# Version: 3.0
+# Date:   02/02/2021 (version 3.0; author: F.Dumont
+#         06/04/2018 (version 2.0; author: X.Lin)
 #         07/16/2017 (version 1.0; author: S.Kamble)
 #
 # Read parameter values from Subcatchment and LIDControl.
 #
 from Core.Subcatchments import Subcatchment
 from Core.LidControl import LIDControl
+from Core.Junction import Junction
 
 class ReadSections:
 
@@ -18,6 +20,7 @@ class ReadSections:
 
         self.subcatchments_data = []
         self.lid_control_data = LIDControl()
+        self.junction_data = []
         print("In ReadSections.__init__()")
         pass
 
@@ -139,7 +142,6 @@ class ReadSections:
                                 if len(item) > 9:
                                     sub_data.subcatchment_drains_to = item[9]
 
-
             if lines[line_num] == "[LID_CONTROLS]\n":
                 lid_control_items = self.read_section_data(lines, line_num)
 
@@ -196,7 +198,28 @@ class ReadSections:
                             self.lid_control_data.drainmat_void_fraction.value = lid_item[3]
                             self.lid_control_data.drainmat_roughness.value = lid_item[4]
 
-        return [self.subcatchments_data, self.lid_control_data]
+            if lines[line_num] == "[JUNCTIONS]\n":
+                jun_items = self.read_section_data(lines, line_num)
+
+                print("Junctions: ")
+                print(jun_items)
+
+                jun_index = 0
+
+                for item in jun_items:
+                    if len(item) > 1:
+                        item = item.split()
+                        jun_index = jun_index + 1
+                        jun = Junction(jun_index, item[0])
+                        jun.invert_elevation.value = item[1]
+                        jun.max_depth.value = item[2]
+                        jun.init_depth.value = item[3]
+                        jun.surcharge_depth.value = item[4]
+                        jun.ponded_depth.value = item[5]
+                        self.junction_data.append(jun)
+
+
+        return [self.subcatchments_data, self.lid_control_data, self.junction_data]
 
 
     #@staticmethod
