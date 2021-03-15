@@ -108,13 +108,14 @@ class MainFrame(QMainWindow, NewFileUI.Ui_MainWindow): # This class contains all
         self.helpWindow = LoadHelpWindow() # Class LoadHelpWindow
 
     def loadPestCalibrationWindow(self): #Display Pest Calibration Window
-        # save Sub and LID data before Calibration
+        # save Sub, LID, and junction data before Calibration
         # save LID data (lower limit, upper limit,Fixed, None)
         self.saveLIDParametersValue()
         # save Current Subcatchment data (lower limit, upper limit,Fixed, None)
         self.saveSubParametersValue()
-        # After save all parameters, write tpl file
+
         self.saveJunctionParametersValue()
+        # After save all parameters, write tpl file
         write_sections_data = write_sections(self.subcatchments_data, self.lid_controls_data)  # Create and Write tpl file
         write_sections_data.write_template_data(self.subcatchments_data)
         
@@ -507,7 +508,7 @@ class MainFrame(QMainWindow, NewFileUI.Ui_MainWindow): # This class contains all
 
         if type_of == "Junction":
             for i in reversed(range(self.mainFrame.formLayout_Jun.count())): # clear formLayout_Jun
-                self.mainFrame.formLayout_Jun.itemAt(i).widget.setParent(None)
+                self.mainFrame.formLayout_Jun.itemAt(i).widget().setParent(None)
 
             # save current juntion data (lower limit, uper limit, Fixed, None
             self.saveJunctionParametersValue()
@@ -1108,6 +1109,9 @@ class MainFrame(QMainWindow, NewFileUI.Ui_MainWindow): # This class contains all
         for sub in self.subcatchments_data:
             all_selected_pars.extend(sub.get_all_selected_pars())
 
+        for jun in self.junction_data:
+            all_selected_pars.extend(jun.get_all_selected_pars())
+
         all_selected_pars.extend(self.lid_controls_data.get_all_selected_pars())
         num_of_pars = len(all_selected_pars)
         # print(obs_data[:50])
@@ -1503,6 +1507,7 @@ class MainFrame(QMainWindow, NewFileUI.Ui_MainWindow): # This class contains all
             self.saveParameterValues(self.current_jun.ponded_depth)
 
     def readJunctionParametersValue(self):
+        print(self.current_jun.name)
         self.readParameterValues(self.current_jun.invert_elevation)
         self.readParameterValues(self.current_jun.max_depth)
         self.readParameterValues(self.current_jun.init_depth)

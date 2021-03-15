@@ -3,8 +3,9 @@
   --------------------------------------------------------------
 
   
-  ERROR 187: LID area exceeds total area for Subcatchment FS10.
+  ERROR 205: invalid keyword NO at line 26 of [OPTION] section:
+   NORMAL_FLOW_LIMITED
 
-  Analysis begun on:  Wed Feb 17 15:31:52 2021
-  Analysis ended on:  Wed Feb 17 15:31:52 2021
+  Analysis begun on:  Mon Mar 15 14:54:55 2021
+  Analysis ended on:  Mon Mar 15 14:54:55 2021
   Total elapsed time: < 1 sec

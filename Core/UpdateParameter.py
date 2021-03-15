@@ -1,8 +1,9 @@
 # UpdateParameter.py
 #
 # Project: SWMM2PEST
-# Version: 2.0
+# Version: 3.0
 # Date:   06/04/2018 (version 2.0; author: X.Lin)
+#         03/09/2021 (version 3.0; author: F.Dumont)
 #
 # Generate and Write SWMM report file path.
 #
@@ -14,7 +15,13 @@ class UpdateParameter:
         read_file = ReadSections()  # Class ReadSections Instantiation
         all_data = read_file.read_subcatchment_data(inp_fname)
         subcatchments_data = all_data[0]
-        detailed_report_file=subcatchments_data[-1].detailed_report_file #Get the last subcatchment detailed report file
+        junction_data = all_data[2]
+
+        if len(subcatchments_data) != 0:
+            detailed_report_file=subcatchments_data[-1].detailed_report_file #Get the last subcatchment detailed report file
+        else:
+            detailed_report_file = junction_data[-1].detailed_report_file #Get the last junction detailed report file
+
         inp_fname_dir = inp_fname[:-4]
         out_fname = inp_fname_dir + '.txt'
         out_fname_dir = '\"' + inp_fname_dir + '.txt\"'
