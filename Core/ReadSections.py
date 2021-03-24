@@ -11,6 +11,8 @@
 from Core.Subcatchments import Subcatchment
 from Core.LidControl import LIDControl
 from Core.Junction import Junction
+from Core.Conduit import Conduit
+from Core.Outfall import Outfall
 
 class ReadSections:
 
@@ -21,7 +23,9 @@ class ReadSections:
         self.subcatchments_data = []
         self.lid_control_data = LIDControl()
         self.junction_data = []
-        print("In ReadSections.__init__()")
+        self.conduit_data = []
+        self.outfall_data = []
+
         pass
 
     def read_subcatchment_data(self, file_name):
@@ -218,8 +222,47 @@ class ReadSections:
                         jun.ponded_depth.value = item[5]
                         self.junction_data.append(jun)
 
+            if lines[line_num] == "[CONDUITS]\n":
+                con_items = self.read_section_data(lines, line_num)
 
-        return [self.subcatchments_data, self.lid_control_data, self.junction_data]
+                print("Conduits:")
+                print(con_items)
+
+                con_index = 0
+
+                for item in con_items:
+                    if len(item)> 1:
+                        item = item.split()
+                        con_index = con_index + 1
+                        con = Conduit(con_index, item[0])
+                        con.mannings_roughness.value = item[4]
+                        con.inlet_height.value = item[5]
+                        con.outlet_height.value = item[6]
+                        con.init_flow.value = item[7]
+                        con.max_flow.value = item[8]
+                        self.conduit_data.append(con)
+
+            if lines[line_num] == "[OUTFALLS]\n":
+                out_items = self.read_section_data(lines, line_num)
+
+                print("Outfalls")
+                print(out_items)
+
+                out_index = 0
+
+                for item in out_items:
+                    if len(item) > 1:
+                        item = item.split()
+                        out_index = out_index + 1
+                        out = Outfall(out_index, item[0])
+                        out.invert_elevation.value = item[1]
+                        self.outfall_data.append(out)
+
+
+
+
+
+        return [self.subcatchments_data, self.lid_control_data, self.junction_data, self.conduit_data, self.outfall_data]
 
 
     #@staticmethod

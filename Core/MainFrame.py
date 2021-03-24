@@ -63,7 +63,7 @@ class SwmmThread(QThread): # Separate thread that calls swmm and runs it in the 
 
 
 
-class MainFrame(QMainWindow, NewFileUI.Ui_MainWindow): # This class contains all the functionalities required for the UI
+class MainFrame(QMainWindow, NewFileUI.Ui_MainWindow):   # This class contains all the functionalities required for the UI
 
     def __init__(self):
         super(self.__class__, self).__init__()
@@ -109,12 +109,19 @@ class MainFrame(QMainWindow, NewFileUI.Ui_MainWindow): # This class contains all
 
     def loadPestCalibrationWindow(self): #Display Pest Calibration Window
         # save Sub, LID, and junction data before Calibration
+
         # save LID data (lower limit, upper limit,Fixed, None)
         self.saveLIDParametersValue()
         # save Current Subcatchment data (lower limit, upper limit,Fixed, None)
         self.saveSubParametersValue()
-
+        # save Current Junction data (lower limit, upper limit,Fixed, None)
         self.saveJunctionParametersValue()
+        # save Current Conduit data (lower limit, upper limit,Fixed, None)
+        self.saveConduitParametersValue()
+        # save Current Outfall data (lower limit, upper limit,Fixed, None)
+        self.saveOutfallParametersValue()
+
+
         # After save all parameters, write tpl file
         write_sections_data = write_sections(self.subcatchments_data, self.lid_controls_data)  # Create and Write tpl file
         write_sections_data.write_template_data(self.subcatchments_data)
@@ -169,9 +176,36 @@ class MainFrame(QMainWindow, NewFileUI.Ui_MainWindow): # This class contains all
 
         self.mainFrame.listJunction.itemClicked[QtWidgets.QListWidgetItem].connect(self.clickedSlotJunction)
 
+        #conduit data
+
+        self.conduit_data = all_data[3] #get conduit
+
+        conduit_listItems = []
+
+        for i in range(len(self.conduit_data)):
+            conduit_listItems.append(QtWidgets.QListWidgetItem(self.conduit_data[i].name))
+
+        for i in range(len(conduit_listItems)):
+            self.mainFrame.listConduit.addItem((conduit_listItems[i]))  # Display Conduit name in Main Frame
+
+        self.mainFrame.listConduit.itemClicked[QtWidgets.QListWidgetItem].connect(self.clickedSlotConduit)
+
+        #Outfall data
+
+        self.outfall_data = all_data[4]
+
+        outfall_listItems = []
+
+        for i in range(len(self.outfall_data)):
+            outfall_listItems.append(QtWidgets.QListWidgetItem(self.outfall_data[i].name))
+
+        for i in range(len(outfall_listItems)):
+            self.mainFrame.listOutfall.addItem((outfall_listItems[i]))  # Display Outfall name in Main Frame
+
+        self.mainFrame.listOutfall.itemClicked[QtWidgets.QListWidgetItem].connect(self.clickedSlotOutfall)
 
         # Initiate LID UI Forms for reading and saving (lower limit,upper limit, Fixed info, None info)
-        self.InitiateLIDUIFrom()
+        self.InitiateLIDUIForm()
 
         # Initiate Current Subcatchment UI Forms for reading and saving (lower limit,upper limit, Fixed info, None info)
         self.InitiateSubUIForm()
@@ -179,6 +213,11 @@ class MainFrame(QMainWindow, NewFileUI.Ui_MainWindow): # This class contains all
         self.loadLIDControlsUI() # Display LID Controls in UI
 
         self.InitiateJunctionUIForm()
+
+        self.InitiateConduitUIForm()
+
+        self.InitiateOutfallUIForm()
+
         self.run_swmm()
 
     def displaySubAndLIDWindow(self, item, type_of):  # Load the parameters window for subcatchments and LID controls
@@ -537,6 +576,54 @@ class MainFrame(QMainWindow, NewFileUI.Ui_MainWindow): # This class contains all
             self.mainFrame.formLayout_Jun.addRow(self.current_jun.ponded_depth.label, ponded_depth_edit)
             self.mainFrame.formLayout_Jun.addRow('', self.current_jun.ponded_depth_line_edit_form.horizontalLayoutWidget)
 
+        if type_of == "Conduit":
+            for i in reversed(range(self.mainFrame.formLayout_Con.count())): # clear formLayout_Con
+                self.mainFrame.formLayout_Con.itemAt(i).widget().setParent(None)
+
+            # save current Conduit data (lower limit, upper limit, Fixed, None
+            self.saveConduitParametersValue()
+
+            # read current Conduit data (lower limit, upper limit, fixed, None
+            self.readConduitParametersValue()
+
+
+            mannings_roughness_edit = self.createLineEdit(self.current_con.mannings_roughness)
+            inlet_height_edit = self.createLineEdit(self.current_con.inlet_height)
+            outlet_height_edit = self.createLineEdit(self.current_con.outlet_height)
+            init_flow_edit = self.createLineEdit(self.current_con.init_flow)
+            max_flow_edit = self.createLineEdit(self.current_con.max_flow)
+
+            self.mainFrame.formLayout_Con.addRow(self.current_con.mannings_roughness.label, mannings_roughness_edit)
+            self.mainFrame.formLayout_Con.addRow('', self.current_con.mannings_roughness_line_edit_form.horizontalLayoutWidget)
+
+            self.mainFrame.formLayout_Con.addRow(self.current_con.inlet_height.label, inlet_height_edit)
+            self.mainFrame.formLayout_Con.addRow('', self.current_con.inlet_height_line_edit_form.horizontalLayoutWidget)
+
+            self.mainFrame.formLayout_Con.addRow(self.current_con.outlet_height.label, outlet_height_edit)
+            self.mainFrame.formLayout_Con.addRow('', self.current_con.outlet_height_line_edit_form.horizontalLayoutWidget)
+
+            self.mainFrame.formLayout_Con.addRow(self.current_con.init_flow.label, init_flow_edit)
+            self.mainFrame.formLayout_Con.addRow('', self.current_con.mannings_roughness_line_edit_form.horizontalLayoutWidget)
+
+            self.mainFrame.formLayout_Con.addRow(self.current_con.max_flow.label, max_flow_edit)
+            self.mainFrame.formLayout_Con.addRow('', self.current_con.max_flow_line_edit_form.horizontalLayoutWidget)
+
+        if type_of == "Outfall":
+            for i in reversed(range(self.mainFrame.formLayout_Out.count())):  # clear formLayout_out
+                self.mainFrame.formLayout_Out.itemAt(i).widget().setParent(None)
+
+            # save current program element data (lower limit, uper limit, Fixed, None
+            self.saveOutfallParametersValue()
+
+            # read current Program Element data (lower limit, upper limit, fixed, None
+            self.readOutfallParametersValue()
+
+            invert_elevation_edit = self.createLineEdit(self.current_out.invert_elevation)
+
+
+            self.mainFrame.formLayout_Out.addRow(self.current_out.invert_elevation.label, invert_elevation_edit)
+            self.mainFrame.formLayout_Out.addRow('', self.current_out.invert_elevation_line_edit_form.horizontalLayoutWidget)
+
     def plot_graphs(self):  # Display graphs
         temp = []
         for i in self.output_values_after_calibration:
@@ -638,116 +725,135 @@ class MainFrame(QMainWindow, NewFileUI.Ui_MainWindow): # This class contains all
         line_edit.setReadOnly(True)
         return line_edit
 
-    def saveParameterValues(self, parameter):  # Save upper and lower limit of the parameter value whenever changed
+    def saveParameterValues(self, type_of,parameter):  # Save upper and lower limit of the parameter value whenever changed
         # Subcatchment Parameters
-        if parameter.name == 'area':
-            tempFormUI = self.current_sub.area_line_edit_form
-        elif parameter.name == 'impervious_percent':
-            tempFormUI = self.current_sub.percent_impervious_line_edit_form
-        elif parameter.name == 'width':
-            tempFormUI = self.current_sub.width_line_edit_form
-        elif parameter.name == 'percent_slope':
-            tempFormUI = self.current_sub.percent_slope_line_edit_form
-        elif parameter.name == 'n_imperv':
-            tempFormUI = self.current_sub.n_imperv_line_edit_form
-        elif parameter.name == 'n_perv':
-            tempFormUI = self.current_sub.n_perv_line_edit_form
-        elif parameter.name == 'imperv_storage_depth':
-            tempFormUI = self.current_sub.storage_depth_imperv_line_edit_form
-        elif parameter.name == 'perv_storage_depth':
-            tempFormUI = self.current_sub.storage_depth_perv_line_edit_form
-        elif parameter.name == 'percent_zero_impervious':
-            tempFormUI = self.current_sub.percent_zero_impervious_line_edit_form
-        elif parameter.name == 'suction':
-            tempFormUI = self.current_sub.suction_line_edit_form
-        elif parameter.name == 'hydraulic_conductivity':
-            tempFormUI = self.current_sub.hydraulic_conductivity_line_edit_form
-        elif parameter.name == 'initial_moisture_deficit':
-            tempFormUI = self.current_sub.initial_moisture_deficit_line_edit_form
-        elif parameter.name == 'number_replicate_units':
-            tempFormUI = self.current_sub.number_replicate_units_line_edit_form
-        elif parameter.name == 'area_each_unit':
-            tempFormUI = self.current_sub.area_each_unit_line_edit_form
-        elif parameter.name == 'top_width_overland_flow_surface':
-            tempFormUI = self.current_sub.top_width_overland_flow_surface_line_edit_form
-        elif parameter.name == 'percent_initially_saturated':
-            tempFormUI = self.current_sub.percent_initially_saturated_line_edit_form
-        elif parameter.name == 'percent_impervious_area_treated':
-            tempFormUI = self.current_sub.percent_impervious_area_treated_line_edit_form
-        elif parameter.name == 'send_outflow_pervious_area':
-            tempFormUI = self.current_sub.send_outflow_pervious_area_line_edit_form
+        if type_of == "Subcatchment":
+            if parameter.name == 'area':
+                tempFormUI = self.current_sub.area_line_edit_form
+            elif parameter.name == 'impervious_percent':
+                tempFormUI = self.current_sub.percent_impervious_line_edit_form
+            elif parameter.name == 'width':
+                tempFormUI = self.current_sub.width_line_edit_form
+            elif parameter.name == 'percent_slope':
+                tempFormUI = self.current_sub.percent_slope_line_edit_form
+            elif parameter.name == 'n_imperv':
+                tempFormUI = self.current_sub.n_imperv_line_edit_form
+            elif parameter.name == 'n_perv':
+                tempFormUI = self.current_sub.n_perv_line_edit_form
+            elif parameter.name == 'imperv_storage_depth':
+                tempFormUI = self.current_sub.storage_depth_imperv_line_edit_form
+            elif parameter.name == 'perv_storage_depth':
+                tempFormUI = self.current_sub.storage_depth_perv_line_edit_form
+            elif parameter.name == 'percent_zero_impervious':
+                tempFormUI = self.current_sub.percent_zero_impervious_line_edit_form
+            elif parameter.name == 'suction':
+                tempFormUI = self.current_sub.suction_line_edit_form
+            elif parameter.name == 'hydraulic_conductivity':
+                tempFormUI = self.current_sub.hydraulic_conductivity_line_edit_form
+            elif parameter.name == 'initial_moisture_deficit':
+                tempFormUI = self.current_sub.initial_moisture_deficit_line_edit_form
+            elif parameter.name == 'number_replicate_units':
+                tempFormUI = self.current_sub.number_replicate_units_line_edit_form
+            elif parameter.name == 'area_each_unit':
+                tempFormUI = self.current_sub.area_each_unit_line_edit_form
+            elif parameter.name == 'top_width_overland_flow_surface':
+                tempFormUI = self.current_sub.top_width_overland_flow_surface_line_edit_form
+            elif parameter.name == 'percent_initially_saturated':
+                tempFormUI = self.current_sub.percent_initially_saturated_line_edit_form
+            elif parameter.name == 'percent_impervious_area_treated':
+                tempFormUI = self.current_sub.percent_impervious_area_treated_line_edit_form
+            elif parameter.name == 'send_outflow_pervious_area':
+                tempFormUI = self.current_sub.send_outflow_pervious_area_line_edit_form
 
         # LID Controls Parameters
-
-        if parameter.name == 'surface_layer_storage_depth':
-            tempFormUI = self.surface_layer_storage_depth_form
-        elif parameter.name == 'surface_layer_vegetative_cover_fraction':
-            tempFormUI = self.surface_layer_vegetative_cover_fraction_line_edit_form
-        elif parameter.name == 'surface_layer_roughness':
-            tempFormUI = self.surface_layer_roughness_line_edit_form
-        elif parameter.name == 'surface_layer_slope':
-            tempFormUI = self.surface_layer_slope_line_edit_form
-        elif parameter.name == 'surface_layer_swale_side_slope':
-            tempFormUI = self.surface_layer_swale_side_slope_line_edit_form
-        elif parameter.name == 'pavement_layer_thickness':
-            tempFormUI = self.pavement_layer_thickness_line_edit_form
-        elif parameter.name == 'pavement_layer_void_ratio':
-            tempFormUI = self.pavement_layer_void_ratio_line_edit_form
-        elif parameter.name == 'pavement_layer_impervious_surface_fraction':
-            tempFormUI = self.pavement_layer_impervious_surface_fraction_line_edit_form
-        elif parameter.name == 'pavement_layer_permeability':
-            tempFormUI = self.pavement_layer_permeability_line_edit_form
-        elif parameter.name == 'pavement_layer_clogging_factor':
-            tempFormUI = self.pavement_layer_clogging_factor_line_edit_form
-        elif parameter.name == 'soil_layer_thickness':
-            tempFormUI = self.soil_layer_thickness_line_edit_form
-        elif parameter.name == 'soil_layer_porosity':
-            tempFormUI = self.soil_layer_porosity_line_edit_form
-        elif parameter.name == 'soil_layer_field_capacity':
-            tempFormUI = self.soil_layer_field_capacity_line_edit_form
-        elif parameter.name == 'soil_layer_wilting_point':
-            tempFormUI = self.soil_layer_wilting_point_line_edit_form
-        elif parameter.name == 'soil_layer_conductivity':
-            tempFormUI = self.soil_layer_conductivity_line_edit_form
-        elif parameter.name == 'soil_layer_slope':
-            tempFormUI = self.soil_layer_slope_line_edit_form
-        elif parameter.name == 'soil_layer_suction_head':
-            tempFormUI = self.soil_layer_suction_head_line_edit_form
-        elif parameter.name == 'storage_layer_height':
-            tempFormUI = self.storage_layer_height_line_edit_form
-        elif parameter.name == 'storage_layer_void_ratio':
-            tempFormUI = self.storage_layer_void_ratio_line_edit_form
-        elif parameter.name == 'storage_layer_filtration_rate':
-            tempFormUI = self.storage_layer_filtration_rate_line_edit_form
-        elif parameter.name == 'storage_layer_clogging_factor':
-            tempFormUI = self.storage_layer_clogging_factor_line_edit_form
-        elif parameter.name == 'drain_coefficient':
-            tempFormUI = self.drain_coefficient_line_edit_form
-        elif parameter.name == 'drain_exponent':
-            tempFormUI = self.drain_exponent_line_edit_form
-        elif parameter.name == 'drain_offset_height':
-            tempFormUI = self.drain_offset_height_line_edit_form
-        elif parameter.name == 'drain_delay':
-            tempFormUI = self.drain_delay_line_edit_form
-        elif parameter.name == 'drainmat_thickness':
-            tempFormUI = self.drainmat_thickness_line_edit_form
-        elif parameter.name == 'drainmat_void_fraction':
-            tempFormUI = self.drainmat_void_fraction_line_edit_form
-        elif parameter.name == 'drainmat_roughness':
-            tempFormUI = self.drainmat_roughness_line_edit_form
+        if type_of == "LID_Controls":
+            if parameter.name == 'surface_layer_storage_depth':
+                tempFormUI = self.surface_layer_storage_depth_form
+            elif parameter.name == 'surface_layer_vegetative_cover_fraction':
+                tempFormUI = self.surface_layer_vegetative_cover_fraction_line_edit_form
+            elif parameter.name == 'surface_layer_roughness':
+                tempFormUI = self.surface_layer_roughness_line_edit_form
+            elif parameter.name == 'surface_layer_slope':
+                tempFormUI = self.surface_layer_slope_line_edit_form
+            elif parameter.name == 'surface_layer_swale_side_slope':
+                tempFormUI = self.surface_layer_swale_side_slope_line_edit_form
+            elif parameter.name == 'pavement_layer_thickness':
+                tempFormUI = self.pavement_layer_thickness_line_edit_form
+            elif parameter.name == 'pavement_layer_void_ratio':
+                tempFormUI = self.pavement_layer_void_ratio_line_edit_form
+            elif parameter.name == 'pavement_layer_impervious_surface_fraction':
+                tempFormUI = self.pavement_layer_impervious_surface_fraction_line_edit_form
+            elif parameter.name == 'pavement_layer_permeability':
+                tempFormUI = self.pavement_layer_permeability_line_edit_form
+            elif parameter.name == 'pavement_layer_clogging_factor':
+                tempFormUI = self.pavement_layer_clogging_factor_line_edit_form
+            elif parameter.name == 'soil_layer_thickness':
+                tempFormUI = self.soil_layer_thickness_line_edit_form
+            elif parameter.name == 'soil_layer_porosity':
+                tempFormUI = self.soil_layer_porosity_line_edit_form
+            elif parameter.name == 'soil_layer_field_capacity':
+                tempFormUI = self.soil_layer_field_capacity_line_edit_form
+            elif parameter.name == 'soil_layer_wilting_point':
+                tempFormUI = self.soil_layer_wilting_point_line_edit_form
+            elif parameter.name == 'soil_layer_conductivity':
+                tempFormUI = self.soil_layer_conductivity_line_edit_form
+            elif parameter.name == 'soil_layer_slope':
+                tempFormUI = self.soil_layer_slope_line_edit_form
+            elif parameter.name == 'soil_layer_suction_head':
+                tempFormUI = self.soil_layer_suction_head_line_edit_form
+            elif parameter.name == 'storage_layer_height':
+                tempFormUI = self.storage_layer_height_line_edit_form
+            elif parameter.name == 'storage_layer_void_ratio':
+                tempFormUI = self.storage_layer_void_ratio_line_edit_form
+            elif parameter.name == 'storage_layer_filtration_rate':
+                tempFormUI = self.storage_layer_filtration_rate_line_edit_form
+            elif parameter.name == 'storage_layer_clogging_factor':
+                tempFormUI = self.storage_layer_clogging_factor_line_edit_form
+            elif parameter.name == 'drain_coefficient':
+                tempFormUI = self.drain_coefficient_line_edit_form
+            elif parameter.name == 'drain_exponent':
+                tempFormUI = self.drain_exponent_line_edit_form
+            elif parameter.name == 'drain_offset_height':
+                tempFormUI = self.drain_offset_height_line_edit_form
+            elif parameter.name == 'drain_delay':
+                tempFormUI = self.drain_delay_line_edit_form
+            elif parameter.name == 'drainmat_thickness':
+                tempFormUI = self.drainmat_thickness_line_edit_form
+            elif parameter.name == 'drainmat_void_fraction':
+                tempFormUI = self.drainmat_void_fraction_line_edit_form
+            elif parameter.name == 'drainmat_roughness':
+                tempFormUI = self.drainmat_roughness_line_edit_form
 
         # Junction Parameters
+        if type_of == "Junction":
+            if parameter.name == 'invert_elevation':
+                tempFormUI = self.current_jun.invert_elevation_line_edit_form
+            elif parameter.name == 'max_depth':
+                tempFormUI = self.current_jun.max_depth_line_edit_form
+            elif parameter.name == 'init_depth':
+                tempFormUI = self.current_jun.init_depth_line_edit_form
+            elif parameter.name == 'surcharge_depth':
+                tempFormUI = self.current_jun.surcharge_depth_line_edit_form
+            elif parameter.name == "ponded_depth":
+                tempFormUI = self.current_jun.ponded_depth_line_edit_form
 
-        if parameter.name == 'invert_elevation':
-            tempFormUI = self.current_jun.invert_elevation_line_edit_form
-        elif parameter.name == 'max_depth':
-            tempFormUI = self.current_jun.max_depth_line_edit_form
-        elif parameter.name == 'init_depth':
-            tempFormUI = self.current_jun.init_depth_line_edit_form
-        elif parameter.name == 'surcharge_depth':
-            tempFormUI = self.current_jun.surcharge_depth_line_edit_form
-        elif parameter.name == "ponded_depth":
-            tempFormUI = self.current_jun.ponded_depth_line_edit_form
+        #Conduit Parameters
+        if type_of == "Conduit":
+            if parameter.name == 'mannings_roughness':
+                tempFormUI = self.current_con.mannings_roughness_line_edit_form
+            elif parameter.name == 'inlet_height':
+                tempFormUI = self.current_con.inlet_height_line_edit_form
+            elif parameter.name == 'outlet_height':
+                tempFormUI = self.current_con.outlet_height_line_edit_form
+            elif parameter.name == 'init_flow':
+                tempFormUI = self.current_con.init_flow_line_edit_form
+            elif parameter.name == 'max_flow':
+                tempFormUI = self.current_con.max_flow_line_edit_form
+
+        #Outfall Parameters
+        if type_of == "Outfall":
+            if parameter.name == 'invert_elevation':
+                    tempFormUI = self.current_out.invert_elevation_line_edit_form
 
 
         lower_limit = tempFormUI.lineEdit_LowerLimit.text()
@@ -777,102 +883,139 @@ class MainFrame(QMainWindow, NewFileUI.Ui_MainWindow): # This class contains all
             vars(vars(self.lid_controls_data)[parameter.name])['is_checked_none'] = is_checked_none
             # print('This is Test', parameter.name, ' ', ' low ', lower_limit, ' upper ', upper_limit,' fixed ',is_checked_fixed,' none ',is_checked_none)
 
-    def readParameterValues(self, parameter):  # Read upper and lower limit, fixed and none settings of the parameter value
+    def readParameterValues(self,type_of, parameter):  # Read upper and lower limit, fixed and none settings of the parameter value
         # Subcatchment Parameters
-        if parameter.name == 'area':
-            tempFormUI = self.current_sub.area_line_edit_form
-        elif parameter.name == 'impervious_percent':
-            tempFormUI = self.current_sub.percent_impervious_line_edit_form
-        elif parameter.name == 'width':
-            tempFormUI = self.current_sub.width_line_edit_form
-        elif parameter.name == 'percent_slope':
-            tempFormUI = self.current_sub.percent_slope_line_edit_form
-        elif parameter.name == 'n_imperv':
-            tempFormUI = self.current_sub.n_imperv_line_edit_form
-        elif parameter.name == 'n_perv':
-            tempFormUI = self.current_sub.n_perv_line_edit_form
-        elif parameter.name == 'imperv_storage_depth':
-            tempFormUI = self.current_sub.storage_depth_imperv_line_edit_form
-        elif parameter.name == 'perv_storage_depth':
-            tempFormUI = self.current_sub.storage_depth_perv_line_edit_form
-        elif parameter.name == 'percent_zero_impervious':
-            tempFormUI = self.current_sub.percent_zero_impervious_line_edit_form
-        elif parameter.name == 'suction':
-            tempFormUI = self.current_sub.suction_line_edit_form
-        elif parameter.name == 'hydraulic_conductivity':
-            tempFormUI = self.current_sub.hydraulic_conductivity_line_edit_form
-        elif parameter.name == 'initial_moisture_deficit':
-            tempFormUI = self.current_sub.initial_moisture_deficit_line_edit_form
-        elif parameter.name == 'number_replicate_units':
-            tempFormUI = self.current_sub.number_replicate_units_line_edit_form
-        elif parameter.name == 'area_each_unit':
-            tempFormUI = self.current_sub.area_each_unit_line_edit_form
-        elif parameter.name == 'top_width_overland_flow_surface':
-            tempFormUI = self.current_sub.top_width_overland_flow_surface_line_edit_form
-        elif parameter.name == 'percent_initially_saturated':
-            tempFormUI = self.current_sub.percent_initially_saturated_line_edit_form
-        elif parameter.name == 'percent_impervious_area_treated':
-            tempFormUI = self.current_sub.percent_impervious_area_treated_line_edit_form
-        elif parameter.name == 'send_outflow_pervious_area':
-            tempFormUI = self.current_sub.send_outflow_pervious_area_line_edit_form
+        if type_of == "Subcatchment":
+            if parameter.name == 'area':
+                tempFormUI = self.current_sub.area_line_edit_form
+            elif parameter.name == 'impervious_percent':
+                tempFormUI = self.current_sub.percent_impervious_line_edit_form
+            elif parameter.name == 'width':
+                tempFormUI = self.current_sub.width_line_edit_form
+            elif parameter.name == 'percent_slope':
+                tempFormUI = self.current_sub.percent_slope_line_edit_form
+            elif parameter.name == 'n_imperv':
+                tempFormUI = self.current_sub.n_imperv_line_edit_form
+            elif parameter.name == 'n_perv':
+                tempFormUI = self.current_sub.n_perv_line_edit_form
+            elif parameter.name == 'imperv_storage_depth':
+                tempFormUI = self.current_sub.storage_depth_imperv_line_edit_form
+            elif parameter.name == 'perv_storage_depth':
+                tempFormUI = self.current_sub.storage_depth_perv_line_edit_form
+            elif parameter.name == 'percent_zero_impervious':
+                tempFormUI = self.current_sub.percent_zero_impervious_line_edit_form
+            elif parameter.name == 'suction':
+                tempFormUI = self.current_sub.suction_line_edit_form
+            elif parameter.name == 'hydraulic_conductivity':
+                tempFormUI = self.current_sub.hydraulic_conductivity_line_edit_form
+            elif parameter.name == 'initial_moisture_deficit':
+                tempFormUI = self.current_sub.initial_moisture_deficit_line_edit_form
+            elif parameter.name == 'number_replicate_units':
+                tempFormUI = self.current_sub.number_replicate_units_line_edit_form
+            elif parameter.name == 'area_each_unit':
+                tempFormUI = self.current_sub.area_each_unit_line_edit_form
+            elif parameter.name == 'top_width_overland_flow_surface':
+                tempFormUI = self.current_sub.top_width_overland_flow_surface_line_edit_form
+            elif parameter.name == 'percent_initially_saturated':
+                tempFormUI = self.current_sub.percent_initially_saturated_line_edit_form
+            elif parameter.name == 'percent_impervious_area_treated':
+                tempFormUI = self.current_sub.percent_impervious_area_treated_line_edit_form
+            elif parameter.name == 'send_outflow_pervious_area':
+                tempFormUI = self.current_sub.send_outflow_pervious_area_line_edit_form
 
         # LID Controls Parameters
-        if parameter.name == 'surface_layer_storage_depth':
-            tempFormUI = self.surface_layer_storage_depth_form
-        elif parameter.name == 'surface_layer_vegetative_cover_fraction':
-            tempFormUI = self.surface_layer_vegetative_cover_fraction_line_edit_form
-        elif parameter.name == 'surface_layer_roughness':
-            tempFormUI = self.surface_layer_roughness_line_edit_form
-        elif parameter.name == 'surface_layer_slope':
-            tempFormUI = self.surface_layer_slope_line_edit_form
-        elif parameter.name == 'surface_layer_swale_side_slope':
-            tempFormUI = self.surface_layer_swale_side_slope_line_edit_form
-        elif parameter.name == 'pavement_layer_thickness':
-            tempFormUI = self.pavement_layer_thickness_line_edit_form
-        elif parameter.name == 'pavement_layer_void_ratio':
-            tempFormUI = self.pavement_layer_void_ratio_line_edit_form
-        elif parameter.name == 'pavement_layer_impervious_surface_fraction':
-            tempFormUI = self.pavement_layer_impervious_surface_fraction_line_edit_form
-        elif parameter.name == 'pavement_layer_permeability':
-            tempFormUI = self.pavement_layer_permeability_line_edit_form
-        elif parameter.name == 'pavement_layer_clogging_factor':
-            tempFormUI = self.pavement_layer_clogging_factor_line_edit_form
-        elif parameter.name == 'soil_layer_thickness':
-            tempFormUI = self.soil_layer_thickness_line_edit_form
-        elif parameter.name == 'soil_layer_porosity':
-            tempFormUI = self.soil_layer_porosity_line_edit_form
-        elif parameter.name == 'soil_layer_field_capacity':
-            tempFormUI = self.soil_layer_field_capacity_line_edit_form
-        elif parameter.name == 'soil_layer_wilting_point':
-            tempFormUI = self.soil_layer_wilting_point_line_edit_form
-        elif parameter.name == 'soil_layer_conductivity':
-            tempFormUI = self.soil_layer_conductivity_line_edit_form
-        elif parameter.name == 'soil_layer_slope':
-            tempFormUI = self.soil_layer_slope_line_edit_form
-        elif parameter.name == 'soil_layer_suction_head':
-            tempFormUI = self.soil_layer_suction_head_line_edit_form
-        elif parameter.name == 'storage_layer_height':
-            tempFormUI = self.storage_layer_height_line_edit_form
-        elif parameter.name == 'storage_layer_void_ratio':
-            tempFormUI = self.storage_layer_void_ratio_line_edit_form
-        elif parameter.name == 'storage_layer_filtration_rate':
-            tempFormUI = self.storage_layer_filtration_rate_line_edit_form
-        elif parameter.name == 'storage_layer_clogging_factor':
-            tempFormUI = self.storage_layer_clogging_factor_line_edit_form
-        elif parameter.name == 'drain_coefficient':
-            tempFormUI = self.drain_coefficient_line_edit_form
-        elif parameter.name == 'drain_exponent':
-            tempFormUI = self.drain_exponent_line_edit_form
-        elif parameter.name == 'drain_offset_height':
-            tempFormUI = self.drain_offset_height_line_edit_form
-        elif parameter.name == 'drain_delay':
-            tempFormUI = self.drain_delay_line_edit_form
-        elif parameter.name == 'drainmat_thickness':
-            tempFormUI = self.drainmat_thickness_line_edit_form
-        elif parameter.name == 'drainmat_void_fraction':
-            tempFormUI = self.drainmat_void_fraction_line_edit_form
-        elif parameter.name == 'drainmat_roughness':
-            tempFormUI = self.drainmat_roughness_line_edit_form
+        if type_of == "LID_Controls":
+            if parameter.name == 'surface_layer_storage_depth':
+                tempFormUI = self.surface_layer_storage_depth_form
+            elif parameter.name == 'surface_layer_vegetative_cover_fraction':
+                tempFormUI = self.surface_layer_vegetative_cover_fraction_line_edit_form
+            elif parameter.name == 'surface_layer_roughness':
+                tempFormUI = self.surface_layer_roughness_line_edit_form
+            elif parameter.name == 'surface_layer_slope':
+                tempFormUI = self.surface_layer_slope_line_edit_form
+            elif parameter.name == 'surface_layer_swale_side_slope':
+                tempFormUI = self.surface_layer_swale_side_slope_line_edit_form
+            elif parameter.name == 'pavement_layer_thickness':
+                tempFormUI = self.pavement_layer_thickness_line_edit_form
+            elif parameter.name == 'pavement_layer_void_ratio':
+                tempFormUI = self.pavement_layer_void_ratio_line_edit_form
+            elif parameter.name == 'pavement_layer_impervious_surface_fraction':
+                tempFormUI = self.pavement_layer_impervious_surface_fraction_line_edit_form
+            elif parameter.name == 'pavement_layer_permeability':
+                tempFormUI = self.pavement_layer_permeability_line_edit_form
+            elif parameter.name == 'pavement_layer_clogging_factor':
+                tempFormUI = self.pavement_layer_clogging_factor_line_edit_form
+            elif parameter.name == 'soil_layer_thickness':
+                tempFormUI = self.soil_layer_thickness_line_edit_form
+            elif parameter.name == 'soil_layer_porosity':
+                tempFormUI = self.soil_layer_porosity_line_edit_form
+            elif parameter.name == 'soil_layer_field_capacity':
+                tempFormUI = self.soil_layer_field_capacity_line_edit_form
+            elif parameter.name == 'soil_layer_wilting_point':
+                tempFormUI = self.soil_layer_wilting_point_line_edit_form
+            elif parameter.name == 'soil_layer_conductivity':
+                tempFormUI = self.soil_layer_conductivity_line_edit_form
+            elif parameter.name == 'soil_layer_slope':
+                tempFormUI = self.soil_layer_slope_line_edit_form
+            elif parameter.name == 'soil_layer_suction_head':
+                tempFormUI = self.soil_layer_suction_head_line_edit_form
+            elif parameter.name == 'storage_layer_height':
+                tempFormUI = self.storage_layer_height_line_edit_form
+            elif parameter.name == 'storage_layer_void_ratio':
+                tempFormUI = self.storage_layer_void_ratio_line_edit_form
+            elif parameter.name == 'storage_layer_filtration_rate':
+                tempFormUI = self.storage_layer_filtration_rate_line_edit_form
+            elif parameter.name == 'storage_layer_clogging_factor':
+                tempFormUI = self.storage_layer_clogging_factor_line_edit_form
+            elif parameter.name == 'drain_coefficient':
+                tempFormUI = self.drain_coefficient_line_edit_form
+            elif parameter.name == 'drain_exponent':
+                tempFormUI = self.drain_exponent_line_edit_form
+            elif parameter.name == 'drain_offset_height':
+                tempFormUI = self.drain_offset_height_line_edit_form
+            elif parameter.name == 'drain_delay':
+                tempFormUI = self.drain_delay_line_edit_form
+            elif parameter.name == 'drainmat_thickness':
+                tempFormUI = self.drainmat_thickness_line_edit_form
+            elif parameter.name == 'drainmat_void_fraction':
+                tempFormUI = self.drainmat_void_fraction_line_edit_form
+            elif parameter.name == 'drainmat_roughness':
+                tempFormUI = self.drainmat_roughness_line_edit_form
+
+        # Junction Parameters
+        if type_of == "Junction":
+            if parameter.name == 'invert_elevation':
+                tempFormUI = self.current_jun.invert_elevation_line_edit_form
+            elif parameter.name == 'max_depth':
+                tempFormUI = self.current_jun.max_depth_line_edit_form
+            elif parameter.name == 'init_depth':
+                tempFormUI = self.current_jun.init_depth_line_edit_form
+            elif parameter.name == 'surcharge_depth':
+                tempFormUI = self.current_jun.surcharge_depth_line_edit_form
+            elif parameter.name == "ponded_depth":
+                tempFormUI = self.current_jun.ponded_depth_line_edit_form
+
+        # Conduit Parameters
+        if type_of == "Conduit":
+            if parameter.name == 'mannings_roughness':
+                tempFormUI = self.current_con.mannings_roughness_line_edit_form
+            elif parameter.name == 'inlet_height':
+                tempFormUI = self.current_con.inlet_height_line_edit_form
+            elif parameter.name == 'outlet_height':
+                tempFormUI = self.current_con.outlet_height_line_edit_form
+            elif parameter.name == 'init_flow':
+                tempFormUI = self.current_con.init_flow_line_edit_form
+            elif parameter.name == 'max_flow':
+                tempFormUI = self.current_con.max_flow_line_edit_form
+
+        # Outfall Parameters
+        if type_of == "Outfall":
+            if parameter.name == 'invert_elevation':
+                tempFormUI = self.current_out.invert_elevation_line_edit_form
+
+
+
+
 
         if (self.current_sub is not None) and (parameter.name in vars(self.current_sub).keys()):
             lower_limit = vars(vars(self.current_sub)[parameter.name])['lower_limit']
@@ -1284,46 +1427,46 @@ class MainFrame(QMainWindow, NewFileUI.Ui_MainWindow): # This class contains all
 
     def saveSubParametersValue(self): # Save all Subcatchments' values ( limit,upper,fixed,none)
         if self.current_sub!=None:
-            self.saveParameterValues(self.current_sub.area)
-            self.saveParameterValues(self.current_sub.impervious_percent)
-            self.saveParameterValues(self.current_sub.width)
-            self.saveParameterValues(self.current_sub.percent_slope)
-            self.saveParameterValues(self.current_sub.n_imperv)
-            self.saveParameterValues(self.current_sub.n_perv)
-            self.saveParameterValues(self.current_sub.imperv_storage_depth)
-            self.saveParameterValues(self.current_sub.perv_storage_depth)
-            self.saveParameterValues(self.current_sub.percent_zero_impervious)
-            self.saveParameterValues(self.current_sub.suction)
-            self.saveParameterValues(self.current_sub.hydraulic_conductivity)
-            self.saveParameterValues(self.current_sub.initial_moisture_deficit)
+            self.saveParameterValues("Subcatchment",self.current_sub.area)
+            self.saveParameterValues("Subcatchment",self.current_sub.impervious_percent)
+            self.saveParameterValues("Subcatchment",self.current_sub.width)
+            self.saveParameterValues("Subcatchment",self.current_sub.percent_slope)
+            self.saveParameterValues("Subcatchment",self.current_sub.n_imperv)
+            self.saveParameterValues("Subcatchment",self.current_sub.n_perv)
+            self.saveParameterValues("Subcatchment",self.current_sub.imperv_storage_depth)
+            self.saveParameterValues("Subcatchment",self.current_sub.perv_storage_depth)
+            self.saveParameterValues("Subcatchment",self.current_sub.percent_zero_impervious)
+            self.saveParameterValues("Subcatchment",self.current_sub.suction)
+            self.saveParameterValues("Subcatchment",self.current_sub.hydraulic_conductivity)
+            self.saveParameterValues("Subcatchment",self.current_sub.initial_moisture_deficit)
             if self.current_sub.control_name != '':
-                self.saveParameterValues(self.current_sub.number_replicate_units)
-                self.saveParameterValues(self.current_sub.area_each_unit)
-                self.saveParameterValues(self.current_sub.top_width_overland_flow_surface)
-                self.saveParameterValues(self.current_sub.percent_initially_saturated)
-                self.saveParameterValues(self.current_sub.percent_impervious_area_treated)
-                self.saveParameterValues(self.current_sub.send_outflow_pervious_area)
+                self.saveParameterValues("Subcatchment",self.current_sub.number_replicate_units)
+                self.saveParameterValues("Subcatchment",self.current_sub.area_each_unit)
+                self.saveParameterValues("Subcatchment",self.current_sub.top_width_overland_flow_surface)
+                self.saveParameterValues("Subcatchment",self.current_sub.percent_initially_saturated)
+                self.saveParameterValues("Subcatchment",self.current_sub.percent_impervious_area_treated)
+                self.saveParameterValues("Subcatchment",self.current_sub.send_outflow_pervious_area)
 
     def readSubParametersValue(self):
-        self.readParameterValues(self.current_sub.area)
-        self.readParameterValues(self.current_sub.impervious_percent)
-        self.readParameterValues(self.current_sub.width)
-        self.readParameterValues(self.current_sub.percent_slope)
-        self.readParameterValues(self.current_sub.n_imperv)
-        self.readParameterValues(self.current_sub.n_perv)
-        self.readParameterValues(self.current_sub.imperv_storage_depth)
-        self.readParameterValues(self.current_sub.perv_storage_depth)
-        self.readParameterValues(self.current_sub.percent_zero_impervious)
-        self.readParameterValues(self.current_sub.suction)
-        self.readParameterValues(self.current_sub.hydraulic_conductivity)
-        self.readParameterValues(self.current_sub.initial_moisture_deficit)
+        self.readParameterValues("Subcatchment",self.current_sub.area)
+        self.readParameterValues("Subcatchment",self.current_sub.impervious_percent)
+        self.readParameterValues("Subcatchment",self.current_sub.width)
+        self.readParameterValues("Subcatchment",self.current_sub.percent_slope)
+        self.readParameterValues("Subcatchment",self.current_sub.n_imperv)
+        self.readParameterValues("Subcatchment",self.current_sub.n_perv)
+        self.readParameterValues("Subcatchment",self.current_sub.imperv_storage_depth)
+        self.readParameterValues("Subcatchment",self.current_sub.perv_storage_depth)
+        self.readParameterValues("Subcatchment",self.current_sub.percent_zero_impervious)
+        self.readParameterValues("Subcatchment",self.current_sub.suction)
+        self.readParameterValues("Subcatchment",self.current_sub.hydraulic_conductivity)
+        self.readParameterValues("Subcatchment",self.current_sub.initial_moisture_deficit)
         if self.current_sub.control_name != '':
-            self.readParameterValues(self.current_sub.number_replicate_units)
-            self.readParameterValues(self.current_sub.area_each_unit)
-            self.readParameterValues(self.current_sub.top_width_overland_flow_surface)
-            self.readParameterValues(self.current_sub.percent_initially_saturated)
-            self.readParameterValues(self.current_sub.percent_impervious_area_treated)
-            self.readParameterValues(self.current_sub.send_outflow_pervious_area)
+            self.readParameterValues("Subcatchment",self.current_sub.number_replicate_units)
+            self.readParameterValues("Subcatchment",self.current_sub.area_each_unit)
+            self.readParameterValues("Subcatchment",self.current_sub.top_width_overland_flow_surface)
+            self.readParameterValues("Subcatchment",self.current_sub.percent_initially_saturated)
+            self.readParameterValues("Subcatchment",self.current_sub.percent_impervious_area_treated)
+            self.readParameterValues("Subcatchment",self.current_sub.send_outflow_pervious_area)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # LID Controls
@@ -1351,7 +1494,7 @@ class MainFrame(QMainWindow, NewFileUI.Ui_MainWindow): # This class contains all
 
         self.mainFrame.listLID_Controls.itemClicked[QtWidgets.QListWidgetItem].connect(self.clickedSlotLID_Controls)
 
-    def InitiateLIDUIFrom(self):
+    def InitiateLIDUIForm(self):
         # Initialize layer's UI Form
         if self.lid_controls_data.has_surface_layer:  # If LID Controls included surface
             self.surface_layer_storage_depth_form = Ui_Form()
@@ -1398,87 +1541,87 @@ class MainFrame(QMainWindow, NewFileUI.Ui_MainWindow): # This class contains all
 
     def saveLIDParametersValue(self):
         if self.lid_controls_data.has_surface_layer:  # If LID Controls included surface
-            self.saveParameterValues(self.lid_controls_data.surface_layer_storage_depth)
-            self.saveParameterValues(self.lid_controls_data.surface_layer_vegetative_cover_fraction)
-            self.saveParameterValues(self.lid_controls_data.surface_layer_roughness)
-            self.saveParameterValues(self.lid_controls_data.surface_layer_slope)
-            self.saveParameterValues(self.lid_controls_data.surface_layer_swale_side_slope)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.surface_layer_storage_depth)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.surface_layer_vegetative_cover_fraction)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.surface_layer_roughness)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.surface_layer_slope)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.surface_layer_swale_side_slope)
 
         if self.lid_controls_data.has_pavement_layer:  # If LID Controls included pavement layer
-            self.saveParameterValues(self.lid_controls_data.pavement_layer_thickness)
-            self.saveParameterValues(self.lid_controls_data.pavement_layer_void_ratio)
-            self.saveParameterValues(self.lid_controls_data.pavement_layer_impervious_surface_fraction)
-            self.saveParameterValues(self.lid_controls_data.pavement_layer_permeability)
-            self.saveParameterValues(self.lid_controls_data.pavement_layer_clogging_factor)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.pavement_layer_thickness)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.pavement_layer_void_ratio)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.pavement_layer_impervious_surface_fraction)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.pavement_layer_permeability)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.pavement_layer_clogging_factor)
 
         if self.lid_controls_data.has_soil_layer:  # If LID Controls included soil
-            self.saveParameterValues(self.lid_controls_data.soil_layer_thickness)
-            self.saveParameterValues(self.lid_controls_data.soil_layer_porosity)
-            self.saveParameterValues(self.lid_controls_data.soil_layer_field_capacity)
-            self.saveParameterValues(self.lid_controls_data.soil_layer_wilting_point)
-            self.saveParameterValues(self.lid_controls_data.soil_layer_conductivity)
-            self.saveParameterValues(self.lid_controls_data.soil_layer_slope)
-            self.saveParameterValues(self.lid_controls_data.soil_layer_suction_head)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.soil_layer_thickness)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.soil_layer_porosity)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.soil_layer_field_capacity)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.soil_layer_wilting_point)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.soil_layer_conductivity)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.soil_layer_slope)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.soil_layer_suction_head)
 
         if self.lid_controls_data.has_storage_layer:  # If LID Controls included storage
-            self.saveParameterValues(self.lid_controls_data.storage_layer_height)
-            self.saveParameterValues(self.lid_controls_data.storage_layer_void_ratio)
-            self.saveParameterValues(self.lid_controls_data.storage_layer_filtration_rate)
-            self.saveParameterValues(self.lid_controls_data.storage_layer_clogging_factor)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.storage_layer_height)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.storage_layer_void_ratio)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.storage_layer_filtration_rate)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.storage_layer_clogging_factor)
 
         if self.lid_controls_data.has_underdrain_system:  # If LID Controls included underdrain_system
 
-            self.saveParameterValues(self.lid_controls_data.drain_coefficient)
-            self.saveParameterValues(self.lid_controls_data.drain_exponent)
-            self.saveParameterValues(self.lid_controls_data.drain_offset_height)
-            self.saveParameterValues(self.lid_controls_data.drain_delay)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.drain_coefficient)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.drain_exponent)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.drain_offset_height)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.drain_delay)
 
         if self.lid_controls_data.has_drainmat_system:  # If LID Controls included DrainMat
-            self.saveParameterValues(self.lid_controls_data.drainmat_thickness)
-            self.saveParameterValues(self.lid_controls_data.drainmat_void_fraction)
-            self.saveParameterValues(self.lid_controls_data.drainmat_roughness)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.drainmat_thickness)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.drainmat_void_fraction)
+            self.saveParameterValues("LID_Controls",self.lid_controls_data.drainmat_roughness)
 
     def readLIDParametersValue(self):
         if self.lid_controls_data.has_surface_layer:  # If LID Controls included surface
-            self.readParameterValues(self.lid_controls_data.surface_layer_storage_depth)
-            self.readParameterValues(self.lid_controls_data.surface_layer_vegetative_cover_fraction)
-            self.readParameterValues(self.lid_controls_data.surface_layer_roughness)
-            self.readParameterValues(self.lid_controls_data.surface_layer_slope)
-            self.readParameterValues(self.lid_controls_data.surface_layer_swale_side_slope)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.surface_layer_storage_depth)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.surface_layer_vegetative_cover_fraction)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.surface_layer_roughness)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.surface_layer_slope)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.surface_layer_swale_side_slope)
 
         if self.lid_controls_data.has_pavement_layer:  # If LID Controls included pavement layer
-            self.readParameterValues(self.lid_controls_data.pavement_layer_thickness)
-            self.readParameterValues(self.lid_controls_data.pavement_layer_void_ratio)
-            self.readParameterValues(self.lid_controls_data.pavement_layer_impervious_surface_fraction)
-            self.readParameterValues(self.lid_controls_data.pavement_layer_permeability)
-            self.readParameterValues(self.lid_controls_data.pavement_layer_clogging_factor)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.pavement_layer_thickness)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.pavement_layer_void_ratio)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.pavement_layer_impervious_surface_fraction)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.pavement_layer_permeability)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.pavement_layer_clogging_factor)
 
         if self.lid_controls_data.has_soil_layer:  # If LID Controls included soil
-            self.readParameterValues(self.lid_controls_data.soil_layer_thickness)
-            self.readParameterValues(self.lid_controls_data.soil_layer_porosity)
-            self.readParameterValues(self.lid_controls_data.soil_layer_field_capacity)
-            self.readParameterValues(self.lid_controls_data.soil_layer_wilting_point)
-            self.readParameterValues(self.lid_controls_data.soil_layer_conductivity)
-            self.readParameterValues(self.lid_controls_data.soil_layer_slope)
-            self.readParameterValues(self.lid_controls_data.soil_layer_suction_head)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.soil_layer_thickness)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.soil_layer_porosity)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.soil_layer_field_capacity)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.soil_layer_wilting_point)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.soil_layer_conductivity)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.soil_layer_slope)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.soil_layer_suction_head)
 
         if self.lid_controls_data.has_storage_layer:  # If LID Controls included storage
-            self.readParameterValues(self.lid_controls_data.storage_layer_height)
-            self.readParameterValues(self.lid_controls_data.storage_layer_void_ratio)
-            self.readParameterValues(self.lid_controls_data.storage_layer_filtration_rate)
-            self.readParameterValues(self.lid_controls_data.storage_layer_clogging_factor)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.storage_layer_height)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.storage_layer_void_ratio)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.storage_layer_filtration_rate)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.storage_layer_clogging_factor)
 
         if self.lid_controls_data.has_underdrain_system:  # If LID Controls included underdrain_system
 
-            self.readParameterValues(self.lid_controls_data.drain_coefficient)
-            self.readParameterValues(self.lid_controls_data.drain_exponent)
-            self.readParameterValues(self.lid_controls_data.drain_offset_height)
-            self.readParameterValues(self.lid_controls_data.drain_delay)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.drain_coefficient)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.drain_exponent)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.drain_offset_height)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.drain_delay)
 
         if self.lid_controls_data.has_drainmat_system:  # If LID Controls included DrainMat
-            self.readParameterValues(self.lid_controls_data.drainmat_thickness)
-            self.readParameterValues(self.lid_controls_data.drainmat_void_fraction)
-            self.readParameterValues(self.lid_controls_data.drainmat_roughness)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.drainmat_thickness)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.drainmat_void_fraction)
+            self.readParameterValues("LID_Controls",self.lid_controls_data.drainmat_roughness)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Junctions
@@ -1500,21 +1643,82 @@ class MainFrame(QMainWindow, NewFileUI.Ui_MainWindow): # This class contains all
 
     def saveJunctionParametersValue(self):
         if self.current_jun != None:
-            self.saveParameterValues(self.current_jun.invert_elevation)
-            self.saveParameterValues(self.current_jun.max_depth)
-            self.saveParameterValues(self.current_jun.init_depth)
-            self.saveParameterValues(self.current_jun.surcharge_depth)
-            self.saveParameterValues(self.current_jun.ponded_depth)
+            self.saveParameterValues("Junction",self.current_jun.invert_elevation)
+            self.saveParameterValues("Junction",self.current_jun.max_depth)
+            self.saveParameterValues("Junction",self.current_jun.init_depth)
+            self.saveParameterValues("Junction",self.current_jun.surcharge_depth)
+            self.saveParameterValues("Junction",self.current_jun.ponded_depth)
 
     def readJunctionParametersValue(self):
         print(self.current_jun.name)
-        self.readParameterValues(self.current_jun.invert_elevation)
-        self.readParameterValues(self.current_jun.max_depth)
-        self.readParameterValues(self.current_jun.init_depth)
-        self.readParameterValues(self.current_jun.surcharge_depth)
-        self.readParameterValues(self.current_jun.ponded_depth)
+        self.readParameterValues("Junction",self.current_jun.invert_elevation)
+        self.readParameterValues("Junction",self.current_jun.max_depth)
+        self.readParameterValues("Junction",self.current_jun.init_depth)
+        self.readParameterValues("Junction",self.current_jun.surcharge_depth)
+        self.readParameterValues("Junction",self.current_jun.ponded_depth)
+
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # conduit
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
+    def InitiateConduitUIForm(self):  # Initialize Conduit UI Form
+        for i in range(len(self.conduit_data)):
+            self.conduit_data[i].mannings_roughness_line_edit_form = Ui_Form()
+            self.conduit_data[i].inlet_height_line_edit_form = Ui_Form()
+            self.conduit_data[i].outlet_height_line_edit_form = Ui_Form()
+            self.conduit_data[i].init_flow_line_edit_form = Ui_Form()
+            self.conduit_data[i].max_flow_line_edit_form = Ui_Form()
+
+    def clickedSlotConduit(self, item):
+        for i in range(len(self.conduit_data)):
+            if self.conduit_data[i].name == item.text():
+                self.current_con = self.conduit_data[i]
+
+        self.displaySubAndLIDWindow(item, "Conduit")
+
+    def saveConduitParametersValue(self):
+        if self.current_con != None:
+            self.saveParameterValues("Conduit",self.current_con.mannings_roughness)
+            self.saveParameterValues("Conduit",self.current_con.inlet_height)
+            self.saveParameterValues("Conduit",self.current_con.outlet_height)
+            self.saveParameterValues("Conduit",self.current_con.init_flow)
+            self.saveParameterValues("Conduit",self.current_con.max_flow)
+
+    def readConduitParametersValue(self):
+        print(self.current_con.name)
+        self.readParameterValues("Conduit",self.current_con.mannings_roughness)
+        self.readParameterValues("Conduit",self.current_con.inlet_height)
+        self.readParameterValues("Conduit",self.current_con.outlet_height)
+        self.readParameterValues("Conduit",self.current_con.init_flow)
+        self.readParameterValues("Conduit",self.current_con.max_flow)
+
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Outfall
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    def InitiateOutfallUIForm(self):  # Initialize Outfall UI Form
+        for i in range(len(self.outfall_data)):
+            self.outfall_data[i].invert_elevation_line_edit_form = Ui_Form()
+
+
+
+    def clickedSlotOutfall(self, item):
+        for i in range(len(self.outfall_data)):
+            if self.outfall_data[i].name == item.text():
+                self.current_out = self.outfall_data[i]
+
+        self.displaySubAndLIDWindow(item, "Outfall")
+
+    def saveOutfallParametersValue(self):
+        if self.current_out != None:
+            self.saveParameterValues("Outfall",self.current_out.invert_elevation)
+
+
+
+    def readOutfallParametersValue(self):
+        print(self.current_out.name)
+        self.readParameterValues("Outfall",self.current_out.invert_elevation)
 
 
 

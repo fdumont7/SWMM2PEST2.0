@@ -21,9 +21,12 @@ class Conduit():
         self.con_index = con_index
         self.name = name
 
-        self.offset_height = DataField('offset_height', "Offset_Height",self.name, index = 0)
-        self.conduit_length = DataField('conduit_length', "Conduit_Length", self.name, index = 0)
-        self.mannings_roughness = DataField('mannings_roughness', "Mannings_Roughness", self.name, index = 0)
+        self.mannings_roughness = DataField('mannings_roughness', "Mannings_Roughness", self.name, index=0)
+        self.inlet_height = DataField('inlet_height', "Inlet_Height",self.name, index = 0)
+        self.outlet_height = DataField('outlet_height', "Outlet_Height", self.name, index=0)
+        self.init_flow = DataField('init_flow', "Init_Flow", self.name, index = 0)
+        self.max_flow = DataField('max_flow', "Max_Flow", self.name, index=0)
+
 
         self.detailed_report_file = ''
 
@@ -33,7 +36,7 @@ class Conduit():
         return self.con_index
 
     def get_conduit_data_as_list(self):
-        return [self.offset_height, self.conduit_length, self.mannings_roughness]
+        return [self.mannings_roughness,self.inlet_height,self.outlet_height,self.init_flow,self.max_flow]
 
     def get_all_selected_pars(self):
 
