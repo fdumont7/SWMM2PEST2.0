@@ -603,7 +603,7 @@ class MainFrame(QMainWindow, NewFileUI.Ui_MainWindow):   # This class contains a
             self.mainFrame.formLayout_Con.addRow('', self.current_con.outlet_height_line_edit_form.horizontalLayoutWidget)
 
             self.mainFrame.formLayout_Con.addRow(self.current_con.init_flow.label, init_flow_edit)
-            self.mainFrame.formLayout_Con.addRow('', self.current_con.mannings_roughness_line_edit_form.horizontalLayoutWidget)
+            self.mainFrame.formLayout_Con.addRow('', self.current_con.init_flow_line_edit_form.horizontalLayoutWidget)
 
             self.mainFrame.formLayout_Con.addRow(self.current_con.max_flow.label, max_flow_edit)
             self.mainFrame.formLayout_Con.addRow('', self.current_con.max_flow_line_edit_form.horizontalLayoutWidget)
